@@ -8,6 +8,7 @@ use App\Import\ImportArtist;
 use App\Models\Artist;
 use App\Models\User;
 use App\Services\ArtistServices;
+use Illuminate\Http\Request;
 
 class ArtistController extends BaseController
 {
@@ -33,15 +34,22 @@ class ArtistController extends BaseController
         }
     }
 
-    public function index(){
+    public function index(Request $request){
         $this->authorize('viewAny',Artist::class);
         if (request('export')) {
             new ArtistExport();
             return to_route('artists.index')
                 ->with('success', 'Export successfully');
         }
-        $artists = $this->artistService->getArtists();
-        return view('artist.list',compact('artists'));
+//        $artists = $this->artistService->getArtists();
+        $response = $this->artistService->getArtistsWithPagination($request);
+        $response = $response->getData();
+        if($response->status === true){
+            $artists = $response->artists;
+            $search = $response->search;
+        }
+
+        return view('artist.list',compact('artists','search'));
     }
 
     public function create()

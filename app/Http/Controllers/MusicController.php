@@ -7,6 +7,7 @@ use App\Models\Music;
 use App\Models\User;
 use App\Services\ArtistServices;
 use App\Services\MusicService;
+use Illuminate\Http\Request;
 
 class MusicController extends BaseController
 {
@@ -17,11 +18,18 @@ class MusicController extends BaseController
         $this->artistServices = $artistServices;
     }
 
-    public function index(){
+    public function index(Request $request){
         $this->authorize('viewAny', Music::class);
 
-        $music = $this->musicService->getMusics();
-        return view('music.list',compact('music'));
+//        $music = $this->musicService->getMusics();
+        $response = $this->musicService->getMusicsWithPagination($request);
+        $response = $response->getData();
+        if($response->status === true){
+            $music = $response->music;
+            $search = $response->search;
+        }
+
+        return view('music.list',compact('music','search'));
     }
 
     public function create()

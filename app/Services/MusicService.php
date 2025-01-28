@@ -33,30 +33,37 @@ class MusicService
 
     public function getMusicsWithPagination($request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('perPage', 5);
         $page = $request->input('page', 1);
         $offset = ($page -1) * $perPage;
         $search = $request->input('search', '');
 
-        $baseQuery = "SELECT * FROM music";
+//        $baseQuery = "SELECT * FROM music ";
+
+        $baseQuery = "SELECT music.*,artists.name as artist_name
+                    FROM music
+                    JOIN artists ON artists.id = music.artist_id";
+
         $countQuery = "SELECT COUNT(*) as total FROM music";
+        $params = [];
 
         if(!empty($search)){
-            $baseQuery .= "WHERE name LIKE ?";
-            $countQuery .= "WHERE name LIKE ?";
+            $baseQuery .= " WHERE name LIKE ?";
+            $countQuery .= " WHERE name LIKE ?";
+            $params = "%$search%";
         }
 
-        $total = DB::selectOne($countQuery, ["%$search%"])->total ?? 0;
+        $total = DB::selectOne($countQuery, $params)->total ?? 0;
 
-        $baseQuery .= "LIMIT ? OFFSET ?";
-        $music = DB::select($baseQuery, empty($search)  ? [$perPage, $offset] : ["%$search%", $perPage, $offset]);
+        $baseQuery .= " LIMIT $perPage OFFSET $offset";
+        $music = DB::select($baseQuery, $params);
 
         $paginator = new LengthAwarePaginator($music,$total, $perPage, $page,[
             'path' => $request->url(),
             'query' => $request->query()
         ]);
 
-        return response()->json(['music' => $paginator, 'search' => $search]);
+        return response()->json(['status' => true, 'music' => $paginator, 'search' => $search]);
     }
 
     public function getMusic($id)

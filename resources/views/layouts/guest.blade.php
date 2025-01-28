@@ -53,5 +53,13 @@
     </div>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updatePerPage(perPage){
+            const url = new URL(window.location.href);
+            url.searchParams.set('perPage', perPage);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        }
+    </script>
 </body>
 </html>

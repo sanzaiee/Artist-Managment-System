@@ -33,7 +33,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($music as $mus)
+                        @forelse($music->data as $mus)
                             <tr>
                                 <td>{{$loop->iteration}}</td>
                                 <td>{{$mus->artist_name}}</td>
@@ -60,7 +60,35 @@
                     </tbody>
 
                 </table>
-
+                <div class="pagination d-flex justify-content-between">
+                    <nav aria-label="">
+                        <ul class="pagination">
+                            @foreach($music->links as $link)
+                                <li class="page-item {{$link->active ? 'active' : ''}}">
+                                    <a class="page-link" href="{{$link->url}}">{!! $link->label  !!}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </nav>
+                    @if($music->total > 5)
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="perPage" class="me-2 mb-0 fw-bold">Records:</label>
+                            <select name="perPage" id="" class="form-control form-select-sm w-auto" onchange="updatePerPage(this.value)">
+                                <option value="10" @selected(request('perPage') == 5)>5</option>
+                                <option value="10" @selected(request('perPage') == 10)>10</option>
+                                <option value="20" @selected(request('perPage') == 20)>20</option>
+                                <option value="50" @selected(request('perPage') == 50)>50</option>
+                                <option value="100" @selected(request('perPage') == 100)>100</option>
+                            </select>
+                            <div>
+                                <span>/</span>
+                                <span class="fw-bold">
+                                    {{$music->total ?? 0}}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
     </div>
 </x-guest-layout>

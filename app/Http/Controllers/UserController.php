@@ -12,11 +12,19 @@ class UserController extends BaseController
     {
         $this->userServices = $userServices;
     }
+
     public function index(Request $request)
     {
         $this->authorize('view', User::class);
-        $users = $this->userServices->getUsers();
-        return view('users.list',compact('users'));
+//        $users = $this->userServices->getUsers();
+        $response = $this->userServices->getUsersWithPagination($request);
+        $response = $response->getData();
+        if($response->status === true){
+            $users = $response->users;
+            $search = $response->search;
+        }
+
+        return view('users.list',compact('users','search'));
     }
 
     public function create()

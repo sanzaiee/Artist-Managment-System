@@ -24,30 +24,32 @@ class ArtistServices
 
     public function getArtistsWithPagination($request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('perPage', 5);
         $page = $request->input('page', 1);
         $offset = ($page -1) * $perPage;
         $search = $request->input('search', '');
 
-        $baseQuery = "SELECT * FROM artists";
+        $baseQuery = "SELECT * FROM artists ";
         $countQuery = "SELECT COUNT(*) as total FROM artists";
+        $params = [];
 
         if(!empty($search)){
-            $baseQuery .= "WHERE name LIKE ?";
+            $baseQuery .= " WHERE name LIKE ?";
             $countQuery .= "WHERE name LIKE ?";
+            $params = "%$search%";
         }
 
-        $total = DB::selectOne($countQuery, ["%$search%"])->total ?? 0;
+        $total = DB::selectOne($countQuery, $params)->total ?? 0;
 
-        $baseQuery .= "LIMIT ? OFFSET ?";
-        $artists = DB::select($baseQuery, empty($search)  ? [$perPage, $offset] : ["%$search%", $perPage, $offset]);
+        $baseQuery .= "LIMIT $perPage OFFSET $offset";
+        $artists = DB::select($baseQuery, $params);
 
         $paginator = new LengthAwarePaginator($artists,$total, $perPage, $page,[
             'path' => $request->url(),
             'query' => $request->query()
         ]);
 
-        return response()->json(['artists' => $paginator, 'search' => $search]);
+        return response()->json(['status' => true,'artists' => $paginator, 'search' => $search]);
     }
 
     public function getArtist($id)

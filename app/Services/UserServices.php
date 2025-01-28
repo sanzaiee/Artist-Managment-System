@@ -24,30 +24,33 @@ class UserServices
 
     public function getUsersWithPagination($request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('perPage', 5);
         $page = $request->input('page', 1);
         $offset = ($page -1) * $perPage;
         $search = $request->input('search', '');
 
         $baseQuery = "SELECT * FROM users";
         $countQuery = "SELECT COUNT(*) as total FROM users";
+        $params = [];
 
         if(!empty($search)){
-            $baseQuery .= "WHERE name LIKE ?";
+            $baseQuery .= " WHERE name LIKE ?";
             $countQuery .= "WHERE name LIKE ?";
+            $params = "%$search%";
         }
 
-        $total = DB::selectOne($countQuery, ["%$search%"])->total ?? 0;
+        $total = DB::selectOne($countQuery, $params)->total ?? 0;
 
-        $baseQuery .= "LIMIT ? OFFSET ?";
-        $users = DB::select($baseQuery, empty($search)  ? [$perPage, $offset] : ["%$search%", $perPage, $offset]);
+        $baseQuery .= " LIMIT $perPage OFFSET $offset";
+        $users = DB::select($baseQuery, $params);
+
 
         $paginator = new LengthAwarePaginator($users,$total, $perPage, $page,[
             'path' => $request->url(),
             'query' => $request->query()
         ]);
 
-        return response()->json(['users' => $paginator, 'search' => $search]);
+        return response()->json(['status' => true,'users' => $paginator, 'search' => $search]);
     }
 
     public function getUser($id)

@@ -40,14 +40,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($artists as $artist)
+                        @forelse($artists->data as $artist)
                             <tr>
                                 <td>{{$loop->iteration}}</td>
                                 <td>{{$artist->name}}</td>
                                 <td>{{$artist->address ?? ''}}</td>
                                 <td>{{$artist->dob ?? ''}}</td>
 
-{{--                                @can('action',Artist::class)--}}
+                                @can('action',Artist::class)
                                     <td class="d-flex justify-content-start align-item-center">
                                         <a href="{{route('artists.edit',$artist->id)}}" class="btn btn-info btn-sm text-white me-2">
                                             EDIT
@@ -61,15 +61,47 @@
                                             </button>
                                         </form>
                                     </td>
-{{--                                @endcan--}}
-
+                                @endcan
                             </tr>
                         @empty
                         @endforelse
                     </tbody>
 
                 </table>
+
+                <div class="pagination d-flex justify-content-between">
+                    <nav aria-label="">
+                        <ul class="pagination">
+                            @foreach($artists->links as $link)
+                                <li class="page-item {{$link->active ? 'active' : ''}}">
+                                    <a class="page-link" href="{{$link->url}}">{!! $link->label  !!}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </nav>
+                    @if($artists->total > 5)
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="perPage" class="me-2 mb-0 fw-bold">Records:</label>
+                            <select name="perPage" id="" class="form-control form-select-sm w-auto" onchange="updatePerPage(this.value)">
+                                <option value="10" @selected(request('perPage') == 5)>5</option>
+                                <option value="10" @selected(request('perPage') == 10)>10</option>
+                                <option value="20" @selected(request('perPage') == 20)>20</option>
+                                <option value="50" @selected(request('perPage') == 50)>50</option>
+                                <option value="100" @selected(request('perPage') == 100)>100</option>
+                            </select>
+                            <div>
+                                <span>/</span>
+                                <span class="fw-bold">
+                                    {{$artists->total ?? 0}}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
             </div>
         </div>
     </div>
+
+
 </x-guest-layout>

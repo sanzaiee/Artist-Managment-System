@@ -1,0 +1,35 @@
+body {
+    background-color: #F3F4F6;
+}
+.card {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 12px;
+    border: 1px solid rgba(209, 213, 219, 0.3);
+}
+
+.heading{
+    color: #758fb3;
+}
+
+.button-primary {
+    background-color: #758fb3;
+}
+.logo {
+    background: #1f2937;
+    color: #ffffff;
+    padding: 1rem;
+    border-radius: 2px
+}
+
+.logout-button{
+    background: #1f2937;
+    color: #ffffff;
+    padding: 1rem;
+}
+
+a.nav-link.active {
+    border: solid 2px black;
+    border-radius: 9px;
+}

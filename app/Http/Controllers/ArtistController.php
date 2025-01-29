@@ -26,92 +26,99 @@ class ArtistController extends BaseController
         try {
             $importer = new ImportArtist($data['excel_file'],$this->artistService);
             $importer->import();
-            return to_route('artists.index')
-                ->with('success', 'Imported successfully');
+
+            return to_route('artists.index')->with('success', 'Imported successfully');
         }catch (\Exception $e){
             return to_route('artists.index')
                 ->with('danger', $e->getMessage());
         }
     }
 
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $this->authorize('viewAny',Artist::class);
+
         if (request('export')) {
-            new ArtistExport();
-            return to_route('artists.index')
-                ->with('success', 'Export successfully');
-        }
-//        $artists = $this->artistService->getArtists();
-        $response = $this->artistService->getArtistsWithPagination($request);
-        $response = $response->getData();
-        if($response->status === true){
-            $artists = $response->artists;
-            $search = $response->search;
+            new ArtistExport($request);
+            return to_route('artists.index')->with('success', 'Export successfully');
         }
 
-        return view('artist.list',compact('artists','search'));
+        $response = $this->artistService->getArtistsWithPagination($request)->getData();
+        if(!$response->status){
+            return back()->withErrors($response->message);
+        }
+
+        return view('artist.list',[
+            'artists' => $response->data->artists,
+            'search' => $response->data->search,
+            'artistInstance' => Artist::class
+        ]);
     }
 
     public function create()
     {
         $this->authorize('create',Artist::class);
-
-        $gender_types = User::GENDERS;
-        return view('artist.form',['gender_types' => $gender_types]);
+        return view('artist.form',['gender_types' => User::GENDERS]);
     }
 
     public function store(ArtistCreateRequest $request)
     {
         $this->authorize('create', Artist::class);
-
-        $data = $request->validated();
-        $response = $this->artistService->storeArtist($data);
-        $response = $response->getData();
-        if($response->status === true){
-            return to_route('artists.index')->with('success', $response->message);
-        }
-        return back()->withErrors($response->message);
-
+        return $this->handelResponse(
+            $this->artistService->storeArtist($request->validated()),
+            'artists.index'
+        );
     }
 
     public function edit(Artist $artist)
     {
         $this->authorize('update',$artist);
-
-        $gender_types = User::GENDERS;
-        $artist = $this->artistService->getArtist($artist->id);
-        $response = $artist->getData();
-        if($response->status === true){
-            $artist = $response->data[0];
-            return view('artist.form',['gender_types' => $gender_types,'artist' => $artist]);
+        $response = $this->artistService->getArtist($artist->id)->getData();
+        if(!$response->status){
+            return back()->withErrors($response->message);
         }
-        return back()->withErrors($response->message);
+
+        return view('artist.form',[
+            'gender_types' => User::GENDERS,
+            'artist' => $response->data
+        ]);
     }
 
     public function update(ArtistCreateRequest $request, Artist $artist)
     {
         $this->authorize('update', $artist);
 
-        $data = $request->validated();
-        $response = $this->artistService->updateArtist($data,$artist->id);
-        $response = $response->getData();
-
-        if($response->status === true){
-            return to_route('artists.index')->with('success', $response->message);
-        }
-        return back()->withErrors($response->message);
+        return $this->handelResponse(
+            $this->artistService->updateArtist($request->validated(),$artist->id),
+            'artists.index'
+        );
     }
 
     public function destroy(Artist $artist)
     {
         $this->authorize('delete', $artist);
 
-        $response = $this->artistService->deleteArtist($artist->id);
-        $response = $response->getData();
-        if($response->status === true){
-            return to_route('artists.index')->with('success',$response->message);
+        return $this->handelResponse(
+            $this->artistService->deleteArtist($artist->id),
+            'artists.index'
+        );
+    }
+
+    public function music(Request $request,$id)
+    {
+        $this->authorize('viewAny',Artist::class);
+
+        $artist = $this->artistService->getArtist($id)->getData();
+        $response = $this->artistService->artistMusic($request,$id)->getData();
+
+        if(!$response->status){
+            return back()->withErrors($response->message);
         }
-        return back()->withErrors('Artist not found!');
+
+        return view('artist.music',[
+            'music' => $response->data,
+            'artist' => $artist->data
+        ]);
     }
 
 }

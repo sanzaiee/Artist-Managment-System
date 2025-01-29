@@ -6,6 +6,16 @@
                 <p class="text-muted small mb-0">Manage and update your artist information</p>
             </div>
 
+            <form action="{{ route('artists.index') }}" method="get">
+                <div class="d-flex justify-items-center">
+                    <input name="search" class="form-control me-1" placeholder="search by name...">
+                    <button class="btn btn-sm btn-primary me-1"><i>Search</i></button>
+                    <a class="btn btn-sm btn-danger" href="{{route('artists.index')}}">
+                        <i>Refresh</i>
+                    </a>
+                </div>
+            </form>
+
             <div class="d-flex align-items-center">
                 <nav aria-label="breadcrumb" class="me-3">
                     <ol class="breadcrumb mb-0">
@@ -19,7 +29,7 @@
                 </nav>
 
                 <div>
-                    <a href="{{ route('artists.index',['export' => true]) }}" class="btn btn-secondary btn-sm me2">
+                    <a href="{{ route('artists.index',['export' => true, 'search' => request('search'), 'page' =>request('page'), 'perPage' =>request('perPage')]) }}" class="btn btn-secondary btn-sm me2">
                         <i>Export</i>
                     </a>
                 </div>
@@ -34,7 +44,7 @@
                             <th>Name</th>
                             <th>Address</th>
                             <th>Date Of Birth</th>
-                            @can('action',Artist::class)
+                            @can('action',$artistInstance)
                                 <th>Action</th>
                             @endcan
                         </tr>
@@ -47,11 +57,16 @@
                                 <td>{{$artist->address ?? ''}}</td>
                                 <td>{{$artist->dob ?? ''}}</td>
 
-                                @can('action',Artist::class)
+                                @can('action',$artistInstance)
                                     <td class="d-flex justify-content-start align-item-center">
+                                        <a href="{{route('artists.music',$artist->id)}}" class="btn btn-primary btn-sm text-white me-2">
+                                            MUSICS
+                                        </a>
+
                                         <a href="{{route('artists.edit',$artist->id)}}" class="btn btn-info btn-sm text-white me-2">
                                             EDIT
                                         </a>
+
                                         <form onsubmit="return confirm('Are you sure?')"
                                               action="{{ route('artists.destroy', $artist->id) }}" method="post">
                                             @csrf
@@ -69,36 +84,7 @@
 
                 </table>
 
-                <div class="pagination d-flex justify-content-between">
-                    <nav aria-label="">
-                        <ul class="pagination">
-                            @foreach($artists->links as $link)
-                                <li class="page-item {{$link->active ? 'active' : ''}}">
-                                    <a class="page-link" href="{{$link->url}}">{!! $link->label  !!}</a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </nav>
-                    @if($artists->total > 5)
-                        <div class="d-flex align-items-center gap-2">
-                            <label for="perPage" class="me-2 mb-0 fw-bold">Records:</label>
-                            <select name="perPage" id="" class="form-control form-select-sm w-auto" onchange="updatePerPage(this.value)">
-                                <option value="10" @selected(request('perPage') == 5)>5</option>
-                                <option value="10" @selected(request('perPage') == 10)>10</option>
-                                <option value="20" @selected(request('perPage') == 20)>20</option>
-                                <option value="50" @selected(request('perPage') == 50)>50</option>
-                                <option value="100" @selected(request('perPage') == 100)>100</option>
-                            </select>
-                            <div>
-                                <span>/</span>
-                                <span class="fw-bold">
-                                    {{$artists->total ?? 0}}
-                                </span>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
+                <x-pagination :model="$artists" />
             </div>
         </div>
     </div>

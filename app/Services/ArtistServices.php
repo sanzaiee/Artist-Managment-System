@@ -2,62 +2,87 @@
 
 namespace App\Services;
 
-use App\Models\Artist;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class ArtistServices
+class ArtistServices extends BaseService
 {
     public function getArtists()
     {
-        $query = "SELECT * FROM artists";
-        return $artists = DB::select($query);
-        return response()->json($artists);
+        try {
+            $query = "SELECT * FROM artists";
+            $artists = DB::select($query);
+
+            return $this->handleResponse(true,200,$artists);
+        }catch (\Exception $e){
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch artists');
+        }
     }
 
     public function getArtistsForDropdown()
     {
-        $query = "SELECT id,name FROM artists";
-        $artists = DB::select($query);
-        return collect($artists)->pluck('name','id');
+        try {
+            $query = "SELECT id,name FROM artists";
+            $artists = DB::select($query);
+
+            return $this->handleResponse(true,200,collect($artists)->pluck('name','id'));
+
+        }catch (\Exception $e){
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch artists');
+        }
     }
+
 
     public function getArtistsWithPagination($request)
     {
-        $perPage = $request->input('perPage', 5);
-        $page = $request->input('page', 1);
-        $offset = ($page -1) * $perPage;
-        $search = $request->input('search', '');
+        try {
+            $perPage = $request->input('perPage', 5);
+            $page = $request->input('page', 1);
+            $offset = ($page -1) * $perPage;
+            $search = $request->input('search', '');
 
-        $baseQuery = "SELECT * FROM artists ";
-        $countQuery = "SELECT COUNT(*) as total FROM artists";
-        $params = [];
+            $baseQuery = "SELECT * FROM artists ";
+            $countQuery = "SELECT COUNT(*) as total FROM artists";
+            $params = [];
 
-        if(!empty($search)){
-            $baseQuery .= " WHERE name LIKE ?";
-            $countQuery .= "WHERE name LIKE ?";
-            $params = "%$search%";
+            if(!empty($search)){
+                $baseQuery .= " WHERE name LIKE ?";
+                $countQuery .= " WHERE name LIKE ?";
+                $params[] = "%$search%";
+            }
+
+            $total = DB::selectOne($countQuery, $params)->total ?? 0;
+
+            $baseQuery .= " LIMIT $perPage OFFSET $offset";
+            $artists = DB::select($baseQuery, $params);
+
+            $paginator = new LengthAwarePaginator($artists,$total, $perPage, $page,[
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]);
+
+            return  $this->handleResponse(true,200,['artists' => $paginator, 'search' => $search]);
+
+        }catch(\Exception $e){
+            $this->logError($e);
+            return  $this->handleResponse(false,404,[],'Failed to fetch paginated artists');
         }
-
-        $total = DB::selectOne($countQuery, $params)->total ?? 0;
-
-        $baseQuery .= "LIMIT $perPage OFFSET $offset";
-        $artists = DB::select($baseQuery, $params);
-
-        $paginator = new LengthAwarePaginator($artists,$total, $perPage, $page,[
-            'path' => $request->url(),
-            'query' => $request->query()
-        ]);
-
-        return response()->json(['status' => true,'artists' => $paginator, 'search' => $search]);
     }
 
     public function getArtist($id)
     {
-        $query = "SELECT * FROM artists WHERE id = ?";
-        $artist = DB::select($query,[$id]);
+        try {
+            $query = "SELECT * FROM artists WHERE id = ?";
+            $artist = DB::select($query,[$id]);
 
-        return response()->json(['status' => true,'data' => $artist]);
+            return $this->handleResponse(true,200,$artist[0]);
+        }catch (\Exception $e)
+        {
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch artists');
+        }
     }
 
     private function formattedUserData($data): array
@@ -76,9 +101,10 @@ class ArtistServices
                         VALUES (?,?,?,?,?,?,NOW(),NOW())";
             DB::insert($query,$formattedData);
 
-            return response()->json(['status' => true,'message' => 'created successfully!']);
+            return $this->handleResponse(true,200,[],'Artist created successfully');
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to store artists');
         }
     }
 
@@ -89,10 +115,11 @@ class ArtistServices
             $formattedData[] = $artistId;
             $query = "UPDATE artists SET name =?, address =?,gender=?,dob=?,first_release_year=?,no_of_albums_released=?,updated_at = NOW() WHERE id =?";
             DB::update($query, $formattedData);
-            return response()->json(['status' => true,'message' => 'updated successfully!']);
 
+            return $this->handleResponse(true,200,[],'Artist updated successfully');
         }catch(\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to update artists');
         }
     }
 
@@ -101,9 +128,53 @@ class ArtistServices
         try {
             $query = "DELETE FROM artists WHERE id = ?";
             DB::delete($query,[$id]);
-            return response()->json(['status' => true,'message' => 'deleted successfully!']);
+
+            return $this->handleResponse(true,200,[],'Artist deleted successfully');
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to delete artists');
+        }
+    }
+
+    public function artistMusic($request,$id)
+    {
+        try{
+            $perPage = $request->input('perPage', 5);
+            $page = $request->input('page', 1);
+            $offset = ($page -1) * $perPage;
+            $search = $request->input('search', '');
+
+            $baseQuery = "SELECT artists.name as artist_name, music.*
+                        FROM artists
+                        JOIN music ON artists.id = music.artist_id
+                        WHERE artists.id = ?
+                       ";
+
+            $countQuery = "SELECT COUNT(*) as total FROM music
+                         WHERE music.artist_id = ?";
+            $params[] = $id;
+
+            if(!empty($search)){
+                $baseQuery .= " AND music.title LIKE ?";
+                $countQuery .= " AND title LIKE ?";
+                $params[] = "%$search%";
+            }
+
+            $total = DB::selectOne($countQuery, $params)->total ?? 0;
+            $baseQuery .= " LIMIT $perPage OFFSET $offset";
+
+            $artists = DB::select($baseQuery, $params);
+
+            $paginator = new LengthAwarePaginator($artists,$total, $perPage, $page,[
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]);
+
+            return $this->handleResponse(true,200,$paginator);
+
+        }catch (\Exception $e){
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch artist music');
         }
     }
 }

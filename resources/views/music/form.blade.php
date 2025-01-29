@@ -82,7 +82,7 @@
                         <select name="genre" id="genre" class="form-control">
                             <option value="">-- Please Select --</option>
                             @forelse($genres as $code => $genre)
-                                <option value="{{$code}}" @selected($code == (isset($artist) ? $music->genre : old('genre')))>{{$genre}}</option>
+                                <option value="{{$code}}" @selected($code == (isset($music) ? $music->genre : old('genre')))>{{$genre}}</option>
                             @empty
                                 <option disabled> No options available</option>
                             @endforelse

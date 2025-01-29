@@ -21,26 +21,27 @@ class MusicController extends BaseController
     public function index(Request $request){
         $this->authorize('viewAny', Music::class);
 
-//        $music = $this->musicService->getMusics();
-        $response = $this->musicService->getMusicsWithPagination($request);
-        $response = $response->getData();
-        if($response->status === true){
-            $music = $response->music;
-            $search = $response->search;
+        $response = $this->musicService->getMusicsWithPagination($request)->getData();
+        if(!$response->status){
+            return back()->withErrors($response->message);
         }
 
-        return view('music.list',compact('music','search'));
+        return view('music.list',[
+            'music' => $response->data->music,
+            'search' => $response->data->search
+        ]);
     }
 
     public function create()
     {
         $this->authorize('create', Music::class);
 
-        $genres= $this->musicService->getGenre();
-        $artists = $this->artistServices->getArtistsForDropdown();
+        $artists = $this->artistServices->getArtistsForDropdown()->getData();
+        $genres= $this->musicService->getGenre()->getData();
+
         return view('music.form',[
-                'genres' => $genres,
-                'artists' => $artists
+            'genres' => $genres->data,
+            'artists' => $artists->data
         ]);
     }
 
@@ -48,54 +49,50 @@ class MusicController extends BaseController
     {
         $this->authorize('create', Music::class);
 
-        $data = $request->validated();
-        $response = $this->musicService->storeMusic($data);
-        $response = $response->getData();
-        if($response->status === true){
-            return to_route('music.index')->with('success', $response->message);
-        }
-        return back()->withErrors($response->message);
-
+        return $this->handelResponse(
+            $this->musicService->storeMusic($request->validated()),
+            'music.index'
+        );
     }
 
     public function edit(Music $music)
     {
         $this->authorize('create', $music);
 
-        $gender_types = User::GENDERS;
-        $artist = $this->musicService->getMusic($music->id);
-        $artists = $this->artistServices->getArtistsForDropdown();
-        $response = $artist->getData();
-        if($response->status === true){
-            $artist = $response->data[0];
-            return view('music.form',['gender_types' => $gender_types,'artist' => $artist,'artists' => $artists]);
+        $response = $this->musicService->getMusic($music->id)->getData();
+        if(!$response->status){
+            return back()->withErrors($response->message);
         }
-        return back()->withErrors($response->message);
+
+        $gender_types = User::GENDERS;
+        $artists = $this->artistServices->getArtistsForDropdown()->getData();
+        $genres= $this->musicService->getGenre()->getData();
+
+        return view('music.form',[
+            'artist' => $response->data,
+            'artists' => $artists->data,
+            'gender_types' => $gender_types,
+            'genres' => $genres->data
+        ]);
     }
 
     public function update(MusicRequest $request, Music $music)
     {
         $this->authorize('create', $music);
 
-        $data = $request->validated();
-        $response = $this->musicService->updateMusic($data,$music->id);
-        $response = $response->getData();
-
-        if($response->status === true){
-            return to_route('music.index')->with('success', $response->message);
-        }
-        return back()->withErrors($response->message);
+        return $this->handelResponse(
+            $this->musicService->updateMusic($request->validated(),$music->id),
+            'music.index'
+        );
     }
 
-    public function destroy($music)
+    public function destroy(Music $music)
     {
         $this->authorize('create', $music);
 
-        $response = $this->musicService->deleteMusic($music->id);
-        $response = $response->getData();
-        if($response->status === true){
-            return to_route('music.index')->with('success',$response->message);
-        }
-        return back()->withErrors('Music not found!');
+        return $this->handelResponse(
+            $this->musicService->deleteMusic($music->id),
+            'music.index'
+        );
     }
 }

@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/artists',\App\Http\Controllers\ArtistController::class);
     Route::post('/artists/import',[\App\Http\Controllers\ArtistController::class,'importExcel'])->name('artists.import');
+    Route::get('/artists/{id}/music',[\App\Http\Controllers\ArtistController::class, 'music'])->name('artists.music');
 
     Route::resource('/users',\App\Http\Controllers\UserController::class);
     Route::resource('/music',\App\Http\Controllers\MusicController::class);
@@ -29,9 +30,3 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 Route::get('/register',\App\Livewire\Auth\Registration::class)->name('register');
-
-Route::get('/log-viewer', function () {
-
-
-    return view('log');
-});

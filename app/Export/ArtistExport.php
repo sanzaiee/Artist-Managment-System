@@ -11,6 +11,17 @@ class ArtistExport extends ExcelExportService
     {
         $query = DB::table('artists');
 
+        if(!empty($filters->query('search'))){
+            $query->where('name','like','%'. $filters->query('search') .'%');
+        }
+
+        if(!empty($filters->query('page'))) {
+            $page = (int)$filters->query('page');
+            $perPage = (int)$filters->query('perPage',5);
+
+            $offset = ($page - 1) * $perPage;
+            $query->skip($offset)->take($perPage);
+        }
         return $query
             ->get()
             ->map(function ($item) {

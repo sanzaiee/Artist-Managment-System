@@ -33,3 +33,9 @@ a.nav-link.active {
     border: solid 2px black;
     border-radius: 9px;
 }
+
+.dropdown-pagination{
+    border: solid 1px;
+    padding: 0 10px;
+    border-radius: 5px;
+}

@@ -67,6 +67,6 @@ class ArtistPolicy
 
     public function action(User $user): bool
     {
-        return $user->hasRole(UserRole::ARTIST_MANAGER);
+        return $user->hasRole(UserRole::SUPER_ADMIN) || $user->hasRole(UserRole::ARTIST_MANAGER);
     }
 }

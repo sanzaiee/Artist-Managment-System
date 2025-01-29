@@ -5,60 +5,71 @@ namespace App\Services;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class UserServices
+class UserServices extends BaseService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
     public function getUsers()
     {
-        $query = "SELECT * FROM users";
-        return $users = DB::select($query);
-        return response()->json($users);
+        try {
+            $query = "SELECT * FROM users";
+            $users = DB::select($query);
+
+            return $this->handleResponse(true,200,$users);
+        }catch (\Exception $e){
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch users');
+        }
     }
 
     public function getUsersWithPagination($request)
     {
-        $perPage = $request->input('perPage', 5);
-        $page = $request->input('page', 1);
-        $offset = ($page -1) * $perPage;
-        $search = $request->input('search', '');
+        try {
 
-        $baseQuery = "SELECT * FROM users";
-        $countQuery = "SELECT COUNT(*) as total FROM users";
-        $params = [];
+            $perPage = $request->input('perPage', 5);
+            $page = $request->input('page', 1);
+            $offset = ($page -1) * $perPage;
+            $search = $request->input('search', '');
 
-        if(!empty($search)){
-            $baseQuery .= " WHERE name LIKE ?";
-            $countQuery .= "WHERE name LIKE ?";
-            $params = "%$search%";
+            $baseQuery = "SELECT * FROM users";
+            $countQuery = "SELECT COUNT(*) as total FROM users";
+            $params = [];
+
+            if(!empty($search)){
+                $baseQuery .= " WHERE first_name LIKE ? OR last_name LIKE ?";
+                $countQuery .= " WHERE first_name LIKE ? OR last_name LIKE ?";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
+
+            $total = DB::selectOne($countQuery, $params)->total ?? 0;
+
+            $baseQuery .= " LIMIT $perPage OFFSET $offset";
+            $users = DB::select($baseQuery, $params);
+
+
+            $paginator = new LengthAwarePaginator($users,$total, $perPage, $page,[
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]);
+
+            return  $this->handleResponse(true,200,['users' => $paginator, 'search' => $search],'Failed to fetch paginated users');
+        }catch(\Exception $e){
+            $this->logError($e);
+            return  $this->handleResponse(false,404,[],'Failed to fetch paginated users');
         }
-
-        $total = DB::selectOne($countQuery, $params)->total ?? 0;
-
-        $baseQuery .= " LIMIT $perPage OFFSET $offset";
-        $users = DB::select($baseQuery, $params);
-
-
-        $paginator = new LengthAwarePaginator($users,$total, $perPage, $page,[
-            'path' => $request->url(),
-            'query' => $request->query()
-        ]);
-
-        return response()->json(['status' => true,'users' => $paginator, 'search' => $search]);
     }
 
     public function getUser($id)
     {
-        $query = "SELECT * FROM users WHERE id = ?";
-        $user = DB::select($query,[$id]);
+        try {
+            $query = "SELECT * FROM users WHERE id = ?";
+            $user = DB::select($query,[$id]);
 
-        return response()->json($user);
+            return $this->handleResponse(true,200,$user[0]);
+        }catch (\Exception $e)
+        {
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch artists');
+        }
     }
 
     public function storeUser($data)
@@ -69,23 +80,27 @@ class UserServices
                         VALUES (?,?,?,?,?,?,?,?,?,NOW(),NOW())";
             DB::insert($query,$formattedData);
 
-            return response()->json(['status' => true,'message' => 'created successfully!']);
+            return $this->handleResponse(true,200,[],'User created successfully');
+
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to store user');
         }
     }
 
     public function updateUser($data,$userId)
     {
         try {
-        $formattedData = $this->formattedUserData($data);
-        $formattedData[] = $userId;
-        $query = "UPDATE users SET first_name =?, last_name =?,email= ?,phone=?,address =?,role_type=?,gender=?,dob=?,password=?, updated_at = NOW() WHERE id =?";
-        DB::update($query, $formattedData);
-        return response()->json(['status' => true,'message' => 'updated successfully!']);
+            $formattedData = $this->formattedUserData($data);
+            $formattedData[] = $userId;
+            $query = "UPDATE users SET first_name =?, last_name =?,email= ?,phone=?,address =?,role_type=?,gender=?,dob=?,password=?, updated_at = NOW() WHERE id =?";
+            DB::update($query, $formattedData);
+
+            return $this->handleResponse(true,200,[],'User updated successfully');
 
         }catch(\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to update user');
         }
     }
 
@@ -102,9 +117,11 @@ class UserServices
         try {
             $query = "DELETE FROM users WHERE id = ?";
             DB::delete($query,[$id]);
-            return response()->json(['status' => true,'message' => 'deleted successfully!']);
+
+            return $this->handleResponse(true,200,[],'User deleted successfully');
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to delete user');
         }
     }
 }

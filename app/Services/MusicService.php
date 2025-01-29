@@ -6,7 +6,7 @@ use App\Models\Music;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class MusicService
+class MusicService extends BaseService
 {
     private $music;
     /**
@@ -19,59 +19,73 @@ class MusicService
 
     public function getGenre()
     {
-        return $this->music::GENRE;
+        return $this->handleResponse(true,200,$this->music::GENRE);
     }
     public function getMusics()
     {
-        $query = "SELECT music.*,artists.name as artist_name
+        try {
+            $query = "SELECT music.*,artists.name as artist_name
                     FROM music
                     JOIN artists ON artists.id = music.artist_id
                     ";
-        return $music = DB::select($query);
-        return response()->json($music);
+            $music = DB::select($query);
+
+            return $this->handleResponse(true,200,$music);
+        }catch (\Exception $e){
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch music');
+        }
     }
 
     public function getMusicsWithPagination($request)
     {
-        $perPage = $request->input('perPage', 5);
-        $page = $request->input('page', 1);
-        $offset = ($page -1) * $perPage;
-        $search = $request->input('search', '');
+        try {
 
-//        $baseQuery = "SELECT * FROM music ";
+            $perPage = $request->input('perPage', 5);
+            $page = $request->input('page', 1);
+            $offset = ($page -1) * $perPage;
+            $search = $request->input('search', '');
 
-        $baseQuery = "SELECT music.*,artists.name as artist_name
-                    FROM music
-                    JOIN artists ON artists.id = music.artist_id";
+            $baseQuery = "SELECT music.*,artists.name as artist_name
+                        FROM music
+                        JOIN artists ON artists.id = music.artist_id";
 
-        $countQuery = "SELECT COUNT(*) as total FROM music";
-        $params = [];
+            $countQuery = "SELECT COUNT(*) as total FROM music";
+            $params = [];
 
-        if(!empty($search)){
-            $baseQuery .= " WHERE name LIKE ?";
-            $countQuery .= " WHERE name LIKE ?";
-            $params = "%$search%";
+            if(!empty($search)){
+                $baseQuery .= " WHERE title LIKE ?";
+                $countQuery .= " WHERE title LIKE ?";
+                $params[] = "%$search%";
+            }
+            $total = DB::selectOne($countQuery, $params)->total ?? 0;
+
+            $baseQuery .= " LIMIT $perPage OFFSET $offset";
+            $music = DB::select($baseQuery, $params);
+            $paginator = new LengthAwarePaginator($music,$total, $perPage, $page,[
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]);
+
+            return  $this->handleResponse(true,200,['music' => $paginator, 'search' => $search]);
+        }catch(\Exception $e){
+            $this->logError($e);
+            return  $this->handleResponse(false,404,[],'Failed to fetch paginated music');
         }
-
-        $total = DB::selectOne($countQuery, $params)->total ?? 0;
-
-        $baseQuery .= " LIMIT $perPage OFFSET $offset";
-        $music = DB::select($baseQuery, $params);
-
-        $paginator = new LengthAwarePaginator($music,$total, $perPage, $page,[
-            'path' => $request->url(),
-            'query' => $request->query()
-        ]);
-
-        return response()->json(['status' => true, 'music' => $paginator, 'search' => $search]);
     }
 
     public function getMusic($id)
     {
-        $query = "SELECT * FROM music WHERE id = ?";
-        $artist = DB::select($query,[$id]);
+        try {
+            $query = "SELECT * FROM music WHERE id = ?";
+            $music = DB::select($query,[$id]);
 
-        return response()->json(['status' => true,'data' => $artist]);
+            return $this->handleResponse(true,200,$music[0]);
+        }catch (\Exception $e)
+        {
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to fetch music');
+        }
     }
 
     private function formattedUserData($data): array
@@ -89,9 +103,10 @@ class MusicService
                         VALUES (?,?,?,?,NOW(),NOW())";
             DB::insert($query,$formattedData);
 
-            return response()->json(['status' => true,'message' => 'created successfully!']);
+            return $this->handleResponse(true,200,[],'Music created successfully');
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to store music');
         }
     }
 
@@ -102,10 +117,11 @@ class MusicService
             $formattedData[] = $musicId;
             $query = "UPDATE music SET title =?, album_name =?,genre=?,artist_id=?,updated_at = NOW() WHERE id =?";
             DB::update($query, $formattedData);
-            return response()->json(['status' => true,'message' => 'updated successfully!']);
+            return $this->handleResponse(true,200,[],'Music updated successfully');
 
         }catch(\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to update music');
         }
     }
 
@@ -114,9 +130,11 @@ class MusicService
         try {
             $query = "DELETE FROM music WHERE id = ?";
             DB::delete($query,[$id]);
-            return response()->json(['status' => true,'message' => 'deleted successfully!']);
+
+            return $this->handleResponse(true,200,[],'Music deleted successfully');
         }catch (\Exception $e){
-            return response()->json(['status' => false,'message' => $e->getMessage()]);
+            $this->logError($e);
+            return $this->handleResponse(false,404,[],'Failed to delete music');
         }
     }
 }

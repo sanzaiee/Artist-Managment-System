@@ -12,30 +12,11 @@ abstract class ExcelImport
     /**
      * Create a new class instance.
      */
-    public function __construct($file)
+    public function __construct($filePath)
     {
-        try {
-            $this->filePath = Storage::path($this->storeFile($file));
-        }catch (\Exception $e){
-            Log::error('Failed to store file', ['error' => $e->getMessage()]);
-            throw new \RuntimeException('Fail to store the uploaded file');
-        }
+        $this->filePath = $filePath;
     }
-    private function storeFile($file): string
-    {
-        $this->validateFile($file);
-        return Storage::putFileAs(
-            'temp',$file,'imported.xlsx'
-        );
-    }
-    private function validateFile($file): void
-    {
-        $allowedExtension = ['xlsx','xls'];
-        if(!$file->isValid() && !in_array($file->getClientOriginalExtenstion(),$allowedExtension))
-        {
-            throw new \InvalidArgumentException('Invalid File. Please upload a valid excel with .xlsx extension');
-        }
-    }
+
     public function getRows(): array
     {
         try {
@@ -47,7 +28,6 @@ abstract class ExcelImport
             Log::error('Failed to read rows from Excel file',['error' => $e->getMessage()]);
             throw new \RuntimeException(('Failed to read rows from the uploaded file'));
         }
-
     }
 
     public function getHeaders(): array
@@ -84,7 +64,7 @@ abstract class ExcelImport
 
     abstract public function formattedData(array $row): array;
 
-    public function unLinkFile()
+    public function unLinkFile(): void
     {
         try{
             if(Storage::exists($this->filePath)){

@@ -43,7 +43,7 @@ class ArtistServices extends BaseService
             $offset = ($page -1) * $perPage;
             $search = $request->input('search', '');
 
-            $baseQuery = "SELECT * FROM artists ";
+            $baseQuery = "SELECT * FROM artists ORDER BY created_at DESC ";
             $countQuery = "SELECT COUNT(*) as total FROM artists";
             $params = [];
 
@@ -148,6 +148,7 @@ class ArtistServices extends BaseService
                         FROM artists
                         JOIN music ON artists.id = music.artist_id
                         WHERE artists.id = ?
+                        ORDER BY artists.created_at ASC
                        ";
 
             $countQuery = "SELECT COUNT(*) as total FROM music

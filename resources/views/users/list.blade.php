@@ -39,6 +39,7 @@
                             <th>Role</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Created At</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -50,6 +51,8 @@
                                 <td>{{$user->role_type}}</td>
                                 <td>{{$user->email ?? ''}}</td>
                                 <td>{{$user->phone ?? ''}}</td>
+                                <td>{{ getDateFormat($user->created_at) }}</td>
+
                                 <td class="d-flex justify-content-start align-item-center">
                                     <a href="{{route('users.show',$user->id)}}" class="btn btn-secondary btn-sm text-white me-2 waves-effect">
                                         <i class="fa fa-eye"></i>

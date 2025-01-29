@@ -48,7 +48,9 @@ class MusicService extends BaseService
 
             $baseQuery = "SELECT music.*,artists.name as artist_name
                         FROM music
-                        JOIN artists ON artists.id = music.artist_id";
+                        JOIN artists ON artists.id = music.artist_id
+                        ORDER BY music.created_at DESC
+                        ";
 
             $countQuery = "SELECT COUNT(*) as total FROM music";
             $params = [];

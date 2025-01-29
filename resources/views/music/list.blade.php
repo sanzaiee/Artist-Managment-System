@@ -42,6 +42,7 @@
                             <th>Title</th>
                             <th>Album Name</th>
                             <th>Genre</th>
+                            <th>Created At</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -53,6 +54,8 @@
                                 <td>{{$mus->title}}</td>
                                 <td>{{$mus->album_name ?? ''}}</td>
                                 <td>{{ getGenreValue($mus->genre) }}</td>
+                                <td>{{ getDateFormat($mus->created_at) }}</td>
+
                                 <td class="d-flex justify-content-start align-item-center">
                                     <a href="{{route('music.show',$mus->id)}}" class="btn btn-secondary btn-sm text-white me-2">
                                         <i class="fa fa-eye"></i>

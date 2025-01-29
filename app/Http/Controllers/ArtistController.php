@@ -4,33 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Export\ArtistExport;
 use App\Http\Requests\Artist\ArtistCreateRequest;
+use App\Http\Requests\Artist\ImportExcelRequest;
 use App\Import\ImportArtist;
+use App\Jobs\ImportArtistJob;
 use App\Models\Artist;
 use App\Models\User;
 use App\Services\ArtistServices;
+use App\Traits\UploadFIle;
 use Illuminate\Http\Request;
 
 class ArtistController extends BaseController
 {
+    use UploadFile;
     protected $artistService;
     public function __construct(ArtistServices $artistService)
     {
         $this->artistService = $artistService;
     }
-    public function importExcel()
+    public function importExcel(ImportExcelRequest $request)
     {
-        $data = request()->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls'
-        ]);
-
         try {
-            $importer = new ImportArtist($data['excel_file'],$this->artistService);
-            $importer->import();
+            $filePath = $this->storeFile($request->excel_file);
+
+            if($request->by_job){
+                ImportArtistJob::dispatch($filePath, $this->artistService);
+            }else{
+                $importer = new ImportArtist($filePath,$this->artistService);
+                $importer->import();
+            }
 
             return to_route('artists.index')->with('success', 'Imported successfully');
         }catch (\Exception $e){
-            return to_route('artists.index')
-                ->with('danger', $e->getMessage());
+            return back()->with('danger', $e->getMessage());
         }
     }
 

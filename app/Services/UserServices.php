@@ -29,7 +29,7 @@ class UserServices extends BaseService
             $offset = ($page -1) * $perPage;
             $search = $request->input('search', '');
 
-            $baseQuery = "SELECT * FROM users";
+            $baseQuery = "SELECT * FROM users ORDER BY created_at DESC ";
             $countQuery = "SELECT COUNT(*) as total FROM users";
             $params = [];
 

@@ -40,6 +40,7 @@
                         <th>Title</th>
                         <th>Album Name</th>
                         <th>Genre</th>
+                        <th>Created At</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -49,6 +50,7 @@
                             <td>{{$item->title ?? ''}}</td>
                             <td>{{$item->album_name ?? ''}}</td>
                             <td>{{getGenreValue($item->genre)}}</td>
+                            <td>{{ getDateFormat($item->created_at) }}</td>
                         </tr>
                     @empty
                     @endforelse

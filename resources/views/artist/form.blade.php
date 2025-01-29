@@ -26,19 +26,45 @@
                 </div>
             </div>
 
-        <form action="{{route('artists.import')}}" method="post" enctype="multipart/form-data">
-            @csrf
-            <div class="d-flex align-items-center justify-content-end mb-4">
-                <div class="form-group">
-                    <label for="import" class="fw-bold">Import Artist</label>
-                    <input type="file" accept="xlsx" name="excel_file" id="import" class="form-control">
-                    <x-input-error :messages="$errors->get('excel_file')" class="mt-2" />
-                </div>
-                <button class="btn btn-secondary btn-sm mt-4">
-                    <i> {{ __('Import') }} </i>
-                </button>
+        <div class="row">
+            <div class="col-md-6">
+                <div>Note:</div>
+                <p class="text-muted small mb-2">
+                    Here we have two choices either import <strong> By Job and Queue </strong> or <strong>Straight Forward </strong> method. Please choose wisely
+                    if you are trying to impor large number of data then please choose <strong> By Job and Queue </strong> method and if you have small data set then you can
+                    go for <strong>Straight Forward </strong> method.
+                </p>
             </div>
-        </form>
+
+            <div class="col-md-6">
+
+            <form action="{{route('artists.import')}}" method="post" enctype="multipart/form-data">
+                @csrf
+                <div class="d-flex align-items-center justify-content-end mb-4">
+                    <div class="form-group me-1">
+                        <label for="import" class="fw-bold">Import Artist</label>
+                        <input type="file" accept="xlsx" name="excel_file" id="import" class="form-control">
+                        <x-input-error :messages="$errors->get('excel_file')" class="mt-2" />
+                    </div>
+                    <div class="form-group me-1">
+                        <label for="by_job" class="fw-bold">Import Artist Using</label>
+                        <select name="by_job" id="by_job" class="form-control">
+                            <option value="">-- Choose Method --</option>
+                            <option value="1">Job and Queue</option>
+                            <option value="0">Normally</option>
+                        </select>
+                        <x-input-error :messages="$errors->get('by_job')" class="mt-2" />
+                    </div>
+
+                    <button class="btn btn-secondary btn-sm mt-4">
+                        <i> {{ __('Import') }} </i>
+                    </button>
+                </div>
+            </form>
+            </div>
+        </div>
+
+
 
         @isset($artist)
             <form action="{{ route('artists.update',$artist->id) }}" method="post" enctype="multipart/form-data">

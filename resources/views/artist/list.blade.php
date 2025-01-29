@@ -47,6 +47,7 @@
                             <th>Name</th>
                             <th>Address</th>
                             <th>Date Of Birth</th>
+                            <th>Created At</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -57,6 +58,7 @@
                                 <td>{{$artist->name}}</td>
                                 <td>{{$artist->address ?? ''}}</td>
                                 <td>{{$artist->dob ?? ''}}</td>
+                                <td>{{ getDateFormat($artist->created_at) }}</td>
 
                                 <td class="d-flex justify-content-start align-item-center">
                                     <a href="{{route('artists.show',$artist->id)}}" class="btn btn-primary btn-sm text-white me-2">

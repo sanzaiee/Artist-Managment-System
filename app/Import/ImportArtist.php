@@ -6,6 +6,7 @@ use App\Services\ArtistServices;
 use App\Services\ExcelImport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ImportArtist extends ExcelImport
 {
@@ -22,9 +23,9 @@ class ImportArtist extends ExcelImport
     /**
      * Create a new class instance.
      */
-    public function __construct($file,ArtistServices $artistServices)
+    public function __construct($filePath,ArtistServices $artistServices)
     {
-        parent::__construct($file);
+        parent::__construct($filePath);
         $this->artistServices = $artistServices;
 
         $this->validateColumns(self::EXPECTED_COLUMNS);
@@ -42,6 +43,24 @@ class ImportArtist extends ExcelImport
         ];
     }
 
+    private function validateData($data)
+    {
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'address' => ['required', 'string', 'max:255'],
+            'gender' => ['required'],
+            'first_release_year' => ['required','numeric','digits:4','after:1900-01-01'],
+            'no_of_albums_released' =>['required','numeric'],
+            'dob' =>['required','date'],
+        ];
+
+        $validator = Validator::make($data,$rules);
+        if($validator->fails()){
+            return $validator->errors();
+        }else{
+            return true;
+        }
+    }
     public function import()
     {
         foreach($this->getRows() as $row)
@@ -50,7 +69,14 @@ class ImportArtist extends ExcelImport
             try{
                 try{
                     $data = $this->formattedData($row);
-                    $this->artistServices->storeArtist($data);
+                    $validated = $this->validateData($data);
+                    if($validated === true){
+                        $this->artistServices->storeArtist($data);
+                    }else{
+                        Log::error('Failed to import artists. Validation errors',[
+                            'error' => $validated
+                        ]);
+                    }
 
                 }catch (\Exception $e){
                     Log::error('Error processing row',[

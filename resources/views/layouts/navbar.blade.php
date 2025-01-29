@@ -27,7 +27,7 @@
                     </li>
                 @endcan
 
-                @can('view',new \App\Models\Artist)
+                @can('viewAny',new \App\Models\Artist)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('artists.index','artists.create','artists.show','artists.edit','artists.music') ? 'active' : '' }}" href="{{ route('artists.index') }}">
                             {{ __('Artist') }}

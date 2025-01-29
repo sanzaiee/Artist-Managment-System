@@ -19,34 +19,35 @@
             <div class="d-flex align-items-center">
                 <nav aria-label="breadcrumb" class="me-3">
                     <ol class="breadcrumb mb-0">
+                        @can('create',$artistInstance)
                         <li class="breadcrumb-item">
                             <a href="{{route('artists.create')}}" class="text-decoration-none text-primary">
                                 Create
                             </a>
                         </li>
+                        @endcan
                         <li class="breadcrumb-item active" aria-current="page">List</li>
                     </ol>
                 </nav>
-
-                <div>
-                    <a href="{{ route('artists.index',['export' => true, 'search' => request('search'), 'page' =>request('page'), 'perPage' =>request('perPage')]) }}" class="btn btn-secondary btn-sm me2">
-                        <i>Export</i>
-                    </a>
-                </div>
+                @can('exportAndImport',$artistInstance)
+                    <div>
+                        <a href="{{ route('artists.index',['export' => true, 'search' => request('search'), 'page' =>request('page'), 'perPage' =>request('perPage')]) }}" class="btn btn-secondary btn-sm me2">
+                            <i>Export</i>
+                        </a>
+                    </div>
+                @endcan
             </div>
         </div>
         <div class="row">
             <div class="col-md-12 table-responsive">
-                <table class="table table-strip">
+                <table class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>S.N</th>
                             <th>Name</th>
                             <th>Address</th>
                             <th>Date Of Birth</th>
-                            @can('action',$artistInstance)
-                                <th>Action</th>
-                            @endcan
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,26 +58,31 @@
                                 <td>{{$artist->address ?? ''}}</td>
                                 <td>{{$artist->dob ?? ''}}</td>
 
-                                @can('action',$artistInstance)
-                                    <td class="d-flex justify-content-start align-item-center">
-                                        <a href="{{route('artists.music',$artist->id)}}" class="btn btn-primary btn-sm text-white me-2">
-                                            MUSICS
-                                        </a>
+                                <td class="d-flex justify-content-start align-item-center">
+                                    <a href="{{route('artists.show',$artist->id)}}" class="btn btn-primary btn-sm text-white me-2">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    <a href="{{route('artists.music',$artist->id)}}" class="btn btn-secondary btn-sm text-white me-2">
+                                        <i class="fa fa-music"> List</i>
+                                    </a>
 
+                                    @can('update',new App\Models\Artist())
                                         <a href="{{route('artists.edit',$artist->id)}}" class="btn btn-info btn-sm text-white me-2">
-                                            EDIT
+                                            <i class="fa fa-edit"></i>
                                         </a>
+                                    @endcan
 
+                                    @can('delete',new App\Models\Artist())
                                         <form onsubmit="return confirm('Are you sure?')"
                                               action="{{ route('artists.destroy', $artist->id) }}" method="post">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm waves-effect">
-                                                DELETE
+                                                <i class="fa fa-trash"></i>
                                             </button>
                                         </form>
-                                    </td>
-                                @endcan
+                                    @endcan
+                                </td>
                             </tr>
                         @empty
                         @endforelse

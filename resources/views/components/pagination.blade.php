@@ -28,3 +28,15 @@
         </div>
     @endif
 </div>
+
+
+@push('custom-scripts')
+    <script>
+        function updatePerPage(perPage){
+            const url = new URL(window.location.href);
+            url.searchParams.set('perPage', perPage);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        }
+    </script>
+@endpush

@@ -20,19 +20,21 @@
 
                 <nav aria-label="breadcrumb" class="me-3">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{route('music.create')}}" class="text-decoration-none text-primary">
-                                Create
-                            </a>
-                        </li>
+                        @can('create',$musicInstance)
+                            <li class="breadcrumb-item">
+                                <a href="{{route('music.create')}}" class="text-decoration-none text-primary">
+                                    Create
+                                </a>
+                            </li>
+                        @endcan
                         <li class="breadcrumb-item active" aria-current="page">List</li>
                     </ol>
                 </nav>
             </div>
         </div>
-        <div class="row">
+        <div class="row m-2">
             <div class="col-md-12 table-responsive">
-                <table class="table table-strip">
+                <table class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>S.N</th>
@@ -50,26 +52,33 @@
                                 <td>{{$mus->artist_name}}</td>
                                 <td>{{$mus->title}}</td>
                                 <td>{{$mus->album_name ?? ''}}</td>
-                                <td>{{\App\Models\Music::GENRE[$mus->genre] ?? 'Unknown Genre'}}</td>
+                                <td>{{ getGenreValue($mus->genre) }}</td>
                                 <td class="d-flex justify-content-start align-item-center">
-                                    <a href="{{route('music.edit',$mus->id)}}" class="btn btn-info btn-sm text-white me-2">
-                                        EDIT
+                                    <a href="{{route('music.show',$mus->id)}}" class="btn btn-secondary btn-sm text-white me-2">
+                                        <i class="fa fa-eye"></i>
                                     </a>
-                                    <form onsubmit="return confirm('Are you sure?')"
-                                          action="{{ route('music.destroy', $mus->id) }}" method="post">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm waves-effect">
-                                            DELETE
-                                        </button>
-                                    </form>
+                                    @can('update',new \App\Models\Music())
+                                        <a href="{{route('music.edit',$mus->id)}}" class="btn btn-info btn-sm text-white me-2">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    @endcan
+                                    @can('delete',new \App\Models\Music())
+                                        <form onsubmit="return confirm('Are you sure?')"
+                                              action="{{ route('music.destroy', $mus->id) }}" method="post">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm waves-effect">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+
                                 </td>
 
                             </tr>
                         @empty
                         @endforelse
                     </tbody>
-
                 </table>
                 <x-pagination :model="$music" />
             </div>

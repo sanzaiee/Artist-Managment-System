@@ -19,19 +19,24 @@
                         {{ __('Dashboard') }}
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                        {{ __('Users') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('artists.index') ? 'active' : '' }}" href="{{ route('artists.index') }}">
-                        {{ __('Artist') }}
-                    </a>
-                </li>
+                @can('view',auth()->user())
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                            {{ __('Users') }}
+                        </a>
+                    </li>
+                @endcan
+
+                @can('view',new \App\Models\Artist)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('artists.index','artists.create','artists.show','artists.edit','artists.music') ? 'active' : '' }}" href="{{ route('artists.index') }}">
+                            {{ __('Artist') }}
+                        </a>
+                    </li>
+                @endcan
 
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('music.index') ? 'active' : '' }}" href="{{ route('music.index') }}">
+                    <a class="nav-link {{ request()->routeIs('music.index','music.show','music.create','music.edit') ? 'active' : '' }}" href="{{ route('music.index') }}">
                         {{ __('Music') }}
                     </a>
                 </li>

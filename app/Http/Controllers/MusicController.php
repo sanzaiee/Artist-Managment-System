@@ -28,7 +28,8 @@ class MusicController extends BaseController
 
         return view('music.list',[
             'music' => $response->data->music,
-            'search' => $response->data->search
+            'search' => $response->data->search,
+            'musicInstance' => Music::class
         ]);
     }
 
@@ -55,6 +56,17 @@ class MusicController extends BaseController
         );
     }
 
+    public function show(Music $music)
+    {
+        $this->authorize('viewAny', $music);
+
+        $response = $this->musicService->getMusic($music->id)->getData();
+        return view('music.show',[
+            'music' => $response->data,
+        ]);
+
+    }
+
     public function edit(Music $music)
     {
         $this->authorize('create', $music);
@@ -69,7 +81,7 @@ class MusicController extends BaseController
         $genres= $this->musicService->getGenre()->getData();
 
         return view('music.form',[
-            'artist' => $response->data,
+            'music' => $response->data,
             'artists' => $artists->data,
             'gender_types' => $gender_types,
             'genres' => $genres->data

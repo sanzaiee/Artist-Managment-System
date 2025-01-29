@@ -34,6 +34,13 @@ class UserController extends BaseController
         return view('users.form');
     }
 
+    public function show($id)
+    {
+        $this->authorize('view', User::class);
+
+        $response = $this->userServices->getUser($id)->getData();
+        return view('users.show',['user' => $response->data]);
+    }
     public function edit($id)
     {
         $this->authorize('update', User::class);

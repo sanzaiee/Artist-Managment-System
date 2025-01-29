@@ -77,7 +77,10 @@ class MusicService extends BaseService
     public function getMusic($id)
     {
         try {
-            $query = "SELECT * FROM music WHERE id = ?";
+            $query = "SELECT music.*,artists.name as artist_name
+                        FROM music
+                        JOIN artists ON artists.id = music.artist_id
+                        WHERE music.id = ?";
             $music = DB::select($query,[$id]);
 
             return $this->handleResponse(true,200,$music[0]);

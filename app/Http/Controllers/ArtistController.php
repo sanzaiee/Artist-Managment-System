@@ -70,6 +70,14 @@ class ArtistController extends BaseController
         );
     }
 
+    public function show($id)
+    {
+        $this->authorize('viewAny', Artist::class);
+        $response = $this->artistService->getArtist($id)->getData();
+
+        return view('artist.show',['artist' => $response->data]);
+    }
+
     public function edit(Artist $artist)
     {
         $this->authorize('update',$artist);

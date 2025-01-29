@@ -31,7 +31,7 @@
         </div>
         <div class="row">
             <div class="col-md-12 table-responsive">
-                <table class="table table-strip">
+                <table class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>S.N</th>
@@ -51,15 +51,18 @@
                                 <td>{{$user->email ?? ''}}</td>
                                 <td>{{$user->phone ?? ''}}</td>
                                 <td class="d-flex justify-content-start align-item-center">
+                                    <a href="{{route('users.show',$user->id)}}" class="btn btn-secondary btn-sm text-white me-2 waves-effect">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
                                     <a href="{{route('users.edit',$user->id)}}" class="btn btn-info btn-sm text-white me-2 waves-effect">
-                                        EDIT
+                                        <i class="fa fa-edit"></i>
                                     </a>
                                     <form onsubmit="return confirm('Are you sure?')"
                                           action="{{ route('users.destroy', $user->id) }}" method="post">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm waves-effect">
-                                            DELETE
+                                            <i class="fa fa-trash"></i>
                                         </button>
                                     </form>
                                 </td>

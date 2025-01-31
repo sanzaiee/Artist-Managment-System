@@ -60,6 +60,7 @@
                                     <a href="{{route('music.show',$mus->id)}}" class="btn btn-secondary btn-sm text-white me-2">
                                         <i class="fa fa-eye"></i>
                                     </a>
+
                                     @can('update',new \App\Models\Music())
                                         <a href="{{route('music.edit',$mus->id)}}" class="btn btn-info btn-sm text-white me-2">
                                             <i class="fa fa-edit"></i>

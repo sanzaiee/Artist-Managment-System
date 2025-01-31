@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+require __DIR__.'/auth.php';
 
 Route::get('/', function () {
     return view('auth.login');
@@ -22,6 +25,9 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::resource('/users',\App\Http\Controllers\UserController::class);
     Route::resource('/music',\App\Http\Controllers\MusicController::class);
+
+    Route::get('/activity-log',[LogController::class,'activityLog'])->name('activity.log');
+    Route::delete('/activity-log/delete',[LogController::class,'activityLogDestroy'])->name('activity.destroy');
+
 });
 
-require __DIR__.'/auth.php';

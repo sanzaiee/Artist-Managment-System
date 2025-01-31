@@ -33,6 +33,12 @@
                             {{ __('Artist') }}
                         </a>
                     </li>
+
+                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('activity.log') ? 'active' : '' }}" href="{{ route('activity.log') }}">
+                            {{ __('Logs') }}
+                        </a>
+                    </li>
                 @endcan
 
                 <li class="nav-item">
@@ -40,17 +46,19 @@
                         {{ __('Music') }}
                     </a>
                 </li>
+
             </ul>
 
             <!-- Settings Dropdown -->
             <ul class="navbar-nav ms-auto">
                 <!-- Dropdown -->
                 <li class="nav-item dropdown">
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" id="form-logout">
                         @csrf
-                        <button class="btn btn-sm logout-button" type="submit">
+                        <button class="btn btn-sm logout-button" id="logoutButton" type="submit">
                             {{ __('Log Out') }}
                         </button>
+                        <x-loader id="logout_loader" />
                     </form>
                 </li>
             </ul>

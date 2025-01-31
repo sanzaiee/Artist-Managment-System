@@ -8,6 +8,7 @@ use App\Http\Requests\Artist\ImportExcelRequest;
 use App\Import\ImportArtist;
 use App\Jobs\ImportArtistJob;
 use App\Models\Artist;
+use App\Models\ImportJob;
 use App\Models\User;
 use App\Services\ArtistServices;
 use App\Traits\UploadFIle;
@@ -26,6 +27,8 @@ class ArtistController extends BaseController
         try {
             $filePath = $this->storeFile($request->excel_file);
 
+            activity()->event('File Uploaded')->log('File Uploaded and proceeded successfully');
+
             if($request->by_job){
                 ImportArtistJob::dispatch($filePath, $this->artistService);
             }else{
@@ -35,6 +38,7 @@ class ArtistController extends BaseController
 
             return to_route('artists.index')->with('success', 'Imported successfully');
         }catch (\Exception $e){
+            activity()->event('Error')->log('Failed to upload: '. $e->getMessage());
             return back()->with('danger', $e->getMessage());
         }
     }

@@ -25,6 +25,10 @@ abstract class ExcelImport
                 ->toArray();
         }catch(\Exception $e)
         {
+            activity()->event('Failed to read rows')
+                    ->withProperties(['error' =>  $e->getMessage()])
+                    ->log('Failed to read rows from Excel file');
+
             Log::error('Failed to read rows from Excel file',['error' => $e->getMessage()]);
             throw new \RuntimeException(('Failed to read rows from the uploaded file'));
         }
@@ -37,6 +41,10 @@ abstract class ExcelImport
                 ->getHeaders();
         }catch(\Exception $e)
         {
+            activity()->event('Failed to read header')
+                    ->withProperties(['error' =>  $e->getMessage()])
+                    ->log('Failed to read header from Excel file');
+
             Log::error('Failed to read header from Excel file',['error' => $e->getMessage()]);
             throw new \RuntimeException(('Failed to read header from the uploaded file'));
         }
@@ -50,10 +58,17 @@ abstract class ExcelImport
             $extraColumns = array_diff($expectedColumns, $this->getHeaders());
 
             if(!empty($missingColumns) || !empty($extraColumns)){
+                activity()->event('Invalid columns in the excel file')
+                    ->withProperties(['expected_columns' => $expectedColumns,'missing_columns' =>  $missingColumns])
+                    ->log('Column Validation Failed');
                 throw new \RuntimeException('Invalid columns in the excel file.');
             }
 
         }catch (\Exception $e){
+            activity()->event('Column Validation Failed')
+                ->withProperties(['expected_columns' => $expectedColumns,'error' =>  $e->getMessage()])
+                ->log('Column Validation Failed');
+
             Log::error('Column Validation Failed',[
                 'error' => $e->getMessage(),
                 'expected' => $expectedColumns
@@ -64,16 +79,4 @@ abstract class ExcelImport
 
     abstract public function formattedData(array $row): array;
 
-    public function unLinkFile(): void
-    {
-        try{
-            if(Storage::exists($this->filePath)){
-                Storage::delete($this->filePath);
-            }
-        }
-        catch(\Exception $e)
-        {
-            Log::error('Failed delete temporary file',['error' => $e->getMessage()]);
-        }
-    }
 }

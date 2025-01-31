@@ -1,20 +1,17 @@
-
-
 # Artist Management System
 
 ## Environment
-- Laravel 11.39.1
-- php v8.2.6
-- mysql 
 
+-   Laravel 11.39.1
+-   php v8.2.6
+-   mysql
 
-## Installation 
+## Installation
 
-- Clone Repository git clone <GIT_URL> 
-- Copy .env.example as .env
-- Configure database
-- Install composer dependencies composer install
-- Generate Key php artisan key:generate
-- Run migration php artisan migrate
-- Server the Project php artisan serve In another terminal
-
+-   Clone Repository git clone <GIT_URL>
+-   Copy .env.example as .env
+-   Configure database
+-   Install composer dependencies composer install
+-   Generate Key php artisan key:generate
+-   Run migration php artisan migrate
+-   Server the Project php artisan serve In another terminal

@@ -29,7 +29,7 @@
 {{--@endif--}}
 
 @push('custom-scripts')
-    <script>
+    {{-- <script>
         $("#message-alert").fadeTo(2000, 500).slideUp(500);
-    </script>
+    </script> --}}
 @endpush
